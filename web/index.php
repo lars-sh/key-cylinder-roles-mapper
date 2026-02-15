@@ -20,7 +20,8 @@ $isPostRequest = $_SERVER['REQUEST_METHOD'] === 'POST';
 // Call Key Cylinder Roles Mapper
 $message = null;
 if ($isPostRequest) {
-	$sources = array();
+	$source = null;
+	$destination = null;
 	if (isset($_FILES['source'])) {
 		$temp = tempnam('temp', '');
 		unlink($temp);
@@ -30,19 +31,19 @@ if ($isPostRequest) {
 		if ($_FILES['source']['error'] != UPLOAD_ERR_OK || !move_uploaded_file($_FILES['source']['tmp_name'], $source)) {
 			http_response_code(400);
 			$message = 'Beim Hochladen des Ist-Dokuments ist ein Fehler aufgetreten. Versuchen Sie es erneut.';
-			break;
+			$source = null;
 		}
 
 		$destination = $temp . '/_' . preg_replace('/[^ !#$%&\'()+,\\-.0-9;=@A-Z[\\]^_a-z{}~]+/', '', basename($_FILES['destination']['name']));
 		if ($_FILES['destination']['error'] != UPLOAD_ERR_OK || !move_uploaded_file($_FILES['destination']['tmp_name'], $destination)) {
 			http_response_code(400);
 			$message = 'Beim Hochladen des Planungsdokuments ist ein Fehler aufgetreten. Versuchen Sie es erneut.';
-			break;
+			$destination = null;
 		}
 	}
 
 	$result = null;
-	if (count($sources) === 0) {
+	if ($source === null || $destination === null) {
 		http_response_code(400);
 		$message = 'Sie müssen eine Ist- und eine Planungsdatei zum Hochladen auswählen.';
 	} else {
@@ -117,7 +118,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>';
 	<body>
 		<div class="content">
 			<h1>Key Cylinder Roles Mapper</h1>
-			<p class="lead">Der Key Cylinder Roles Mapper vergleicht CSV- und Excel-Dokumente mit Schlüssel-Schließzylinder-Berechtigungen.  liest Exporte der Software „CIP kommunal“ ein und bereitet sie in echter Tabellenform auf, um das Erstellen von Auswertungen zu erleichtern.</p>
+			<p class="lead">Der Key Cylinder Roles Mapper vergleicht CSV- und Excel-Dokumente mit Schlüssel-Schließzylinder-Berechtigungen.</p>
 			<p>CSV-Dateien müssen dem Exportformat von SimonVoss Locking System Management Basic entsprechen. Excel-Dokumente müssen einem eigenen Format (<a href="get/template.xlst">TODO: Vorlage</a>) entsprechen und erlauben die rollenbasierte Planung von Berechtigungen.</p>
 			<p style="font-size: 80%;">Dieser Dienst wird ohne Gewähr bereitgestellt von <a href="https://lars-sh.de/" target="_blank">Lars Knickrehm</a>. Die im Formular angegebenen Daten werden nur für die Zeit der automatisierten Verarbeitung der Anfrage gespeichert und nach Bereitstellung des angeforderten Dokuments gelöscht.</p>
 
@@ -125,7 +126,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>';
 			if ($result !== null) {
 				echo '<h3>Ergebnisse</h3>';
 				if (count($result) === 0) {
-					echo '<ul><li style="font-style: italic;">Keine Unterschiede gefunden.</li></ul>'
+					echo '<ul><li style="font-style: italic;">Keine Unterschiede gefunden.</li></ul>';
 				} else {
 					echo '<ul><li>' . implode('</li><li>', array_map(function ($value) {
 						return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
