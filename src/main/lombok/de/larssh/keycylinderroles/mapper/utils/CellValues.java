@@ -1,0 +1,156 @@
+package de.larssh.keycylinderroles.mapper.utils;
+
+import java.lang.reflect.Constructor;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.Optional;
+import java.util.WeakHashMap;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.formula.eval.ErrorEval;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FormulaError;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
+public class CellValues {
+	@SuppressWarnings({ "checkstyle:ConstantName", "PMD.FieldNamingConventions" })
+	public static final CellValue _NONE = create(CellType._NONE, 0, false, null, 0);
+
+	public static final CellValue BLANK = create(CellType.BLANK, 0, false, null, 0);
+
+	private static final String DATE_STRING_VALUE = "__DATE__";
+
+	private static final Map<Workbook, FormulaEvaluator> FORMULA_EVALUATORS = new WeakHashMap<>();
+
+	@SuppressWarnings({
+			"java:S112",
+			"java:S3011",
+			"PMD.AvoidAccessibilityAlteration",
+			"PMD.AvoidThrowingRawExceptionTypes" })
+	@SuppressFBWarnings(
+			value = { "EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS", "RFI_SET_ACCESSIBLE", "WEM_WEAK_EXCEPTION_MESSAGING" },
+			justification = "correct; not nice but required; no relevant information available here")
+	private CellValue create(final CellType cellType,
+			final double numberValue,
+			final boolean booleanValue,
+			@Nullable final String textValue,
+			final int errorCode) {
+		try {
+			final Constructor<CellValue> constructor = CellValue.class
+					.getDeclaredConstructor(CellType.class, double.class, boolean.class, String.class, int.class);
+			constructor.setAccessible(true);
+			return constructor.newInstance(cellType, numberValue, booleanValue, textValue, errorCode);
+		} catch (final ReflectiveOperationException e) {
+			throw new RuntimeException("Failed creating CellValue instance", e);
+		}
+	}
+
+	@SuppressWarnings({
+			"checkstyle:SuppressWarnings",
+			"PMD.CyclomaticComplexity",
+			"PMD.ExhaustiveSwitchHasDefault",
+			"resource" })
+	public static CellValue create(@Nullable final Cell cell, final boolean evaluateFormula) {
+		if (cell == null) {
+			return new CellValue("");
+		}
+		switch (cell.getCellType()) {
+		case BOOLEAN:
+			return cell.getBooleanCellValue() ? CellValue.TRUE : CellValue.FALSE;
+		case BLANK:
+			return new CellValue("");
+		case ERROR:
+			return CellValue.getError(cell.getErrorCellValue());
+		case FORMULA:
+			return evaluateFormula
+					? evaluateFormula(cell)
+					: create(CellType.FORMULA, 0, false, cell.getCellFormula(), 0);
+		case NUMERIC:
+			return DateUtil.isCellDateFormatted(cell)
+					? create(CellType.NUMERIC,
+							cell.getNumericCellValue(),
+							isUsing1904DateWindowing(cell.getSheet().getWorkbook()),
+							DATE_STRING_VALUE,
+							0)
+					: new CellValue(cell.getNumericCellValue());
+		case STRING:
+			return new CellValue(cell.getStringCellValue());
+		case _NONE:
+		default:
+			return CellValue.getError(FormulaError.FUNCTION_NOT_IMPLEMENTED.getLongCode());
+		}
+	}
+
+	@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
+	private static CellValue evaluateFormula(final Cell cell) {
+		return FORMULA_EVALUATORS
+				.computeIfAbsent(cell.getSheet().getWorkbook(),
+						workbook -> workbook.getCreationHelper().createFormulaEvaluator())
+				.evaluate(cell);
+	}
+
+	@SuppressFBWarnings(value = "OPM_OVERLY_PERMISSIVE_METHOD", justification = "API method")
+	public static Optional<LocalDateTime> getLocalDateTime(final CellValue value) {
+		return isDate(value)
+				? Optional.of(DateUtil.getLocalDateTime(value.getNumberValue(), value.getBooleanValue()))
+				: Optional.empty();
+	}
+
+	@SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
+	public static String getAsString(final CellValue value) {
+		switch (value.getCellType()) {
+		case BOOLEAN:
+			return value.getBooleanValue() ? "TRUE" : "FALSE";
+		case BLANK:
+			return "";
+		case ERROR:
+			return ErrorEval.getText(value.getErrorValue());
+		case NUMERIC:
+			return getLocalDateTime(value).map(localDateTime -> localDateTime.format(DateTimeFormatter.ISO_LOCAL_TIME))
+					.orElseGet(() -> {
+						final String numericValue = Double.toString(value.getNumberValue());
+						return numericValue.endsWith(".0")
+								? numericValue.substring(0, numericValue.length() - 2)
+								: numericValue;
+					});
+		case STRING:
+		case FORMULA:
+			return value.getStringValue();
+		case _NONE:
+		default:
+			return "Unexpected Cell Type: " + value.getCellType();
+		}
+	}
+
+	@SuppressFBWarnings(value = "OPM_OVERLY_PERMISSIVE_METHOD", justification = "API method")
+	public static boolean isDate(final CellValue value) {
+		return value.getCellType() == CellType.NUMERIC && DATE_STRING_VALUE.equals(value.getStringValue());
+	}
+
+	@SuppressWarnings({ "checkstyle:SuppressWarnings", "PMD.SimplifyBooleanReturns", "resource" })
+	@SuppressFBWarnings(value = "ITC_INHERITANCE_TYPE_CHECKING", justification = "helper method for external code")
+	private static boolean isUsing1904DateWindowing(final Workbook workbook) {
+		if (workbook instanceof HSSFWorkbook) {
+			return ((HSSFWorkbook) workbook).getInternalWorkbook().isUsing1904DateWindowing();
+		}
+		if (workbook instanceof XSSFWorkbook) {
+			return ((XSSFWorkbook) workbook).isDate1904();
+		}
+		if (workbook instanceof SXSSFWorkbook) {
+			return ((SXSSFWorkbook) workbook).getXSSFWorkbook().isDate1904();
+		}
+		return false;
+	}
+}
