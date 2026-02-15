@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -24,7 +25,6 @@ import java.util.Set;
 import de.larssh.keycylinderroles.mapper.data.Cylinder;
 import de.larssh.keycylinderroles.mapper.data.Key;
 import de.larssh.keycylinderroles.mapper.data.KeyCylinderPermissions;
-import de.larssh.utils.Finals;
 import de.larssh.utils.Optionals;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.text.Csv;
@@ -35,10 +35,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@SuppressWarnings("PMD.LooseCoupling")
 public class CsvFiles {
-	private static final char CSV_SEPARATOR = Finals.constant(';');
+	private static final char CSV_SEPARATOR = ';';
 
-	private static final char CSV_ESCAPER = Finals.constant('"');
+	private static final char CSV_ESCAPER = '"';
 
 	private static final int COLUMN_CYLINDER_BUILDING = 0;
 
@@ -62,7 +63,7 @@ public class CsvFiles {
 		// SimonVoss Locking System Management seems to use UTF-16 LE by default
 		try (InputStream inputStream = Files.newInputStream(path)) {
 			inputStream.read();
-			if (inputStream.read() == '\0') {
+			if (inputStream.read() == 0) {
 				return StandardCharsets.UTF_16LE;
 			}
 		}
@@ -78,7 +79,7 @@ public class CsvFiles {
 
 	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	private static class CsvFileReader {
-		private static OptionalInt getFirstNonBlank(final List<String> values) {
+		private static OptionalInt getFirstNonBlank(final Iterable<String> values) {
 			int index = 0;
 			for (final String value : values) {
 				if (!Strings.isBlank(value)) {
@@ -89,13 +90,13 @@ public class CsvFiles {
 			return OptionalInt.empty();
 		}
 
-		private static int getFirstNonBlankColumn(final Csv csv, final int column) {
+		private static int getFirstNonBlankColumn(final Collection<CsvRow> csv, final int column) {
 			return csv.stream().allMatch(row -> row.size() <= column || Strings.isBlank(row.get(column)))
 					? getFirstNonBlankColumn(csv, column + 1)
 					: column;
 		}
 
-		private static Optional<CsvRow> getFirstNonBlankRow(final Csv csv) {
+		private static Optional<CsvRow> getFirstNonBlankRow(final Collection<CsvRow> csv) {
 			return csv.stream().filter(row -> !row.stream().allMatch(Strings::isBlank)).findFirst();
 		}
 
@@ -125,14 +126,15 @@ public class CsvFiles {
 		}
 
 		private Map<Cylinder, Integer> getCylinders(final int firstFilledColumn, final int firstCylinderRow) {
-			final Map<Cylinder, Integer> cylinderRows = new LinkedHashMap<>();
 			final int numberOfRows = csv.size();
+			final Map<Cylinder, Integer> cylinderRows = new LinkedHashMap<>(numberOfRows - firstCylinderRow);
 			for (int row = firstCylinderRow; row < numberOfRows; row += 1) {
 				cylinderRows.put(createCylinder(firstFilledColumn, row), row);
 			}
 			return unmodifiableMap(cylinderRows);
 		}
 
+		@SuppressWarnings("PMD.ShortVariable")
 		private Cylinder createCylinder(final int column, final int rowIndex) {
 			final CsvRow row = csv.get(rowIndex);
 
@@ -158,14 +160,15 @@ public class CsvFiles {
 		}
 
 		private Map<Key, Integer> getKeys(final int firstKeyColumn, final CsvRow firstFilledRow) {
-			final Map<Key, Integer> keyColumns = new LinkedHashMap<>();
 			final int numberOfColumns = firstFilledRow.size();
+			final Map<Key, Integer> keyColumns = new LinkedHashMap<>(numberOfColumns - firstKeyColumn);
 			for (int column = firstKeyColumn; column < numberOfColumns; column += 1) {
 				keyColumns.put(createKey(column, firstFilledRow.getRowIndex()), column);
 			}
 			return unmodifiableMap(keyColumns);
 		}
 
+		@SuppressWarnings("PMD.ShortVariable")
 		private Key createKey(final int column, final int row) {
 			final String id = getValue(csv.get(row + ROW_KEY_ID), column).orElseThrow(); // TODO
 			final Optional<String> lastName = getValue(csv.get(row + ROW_KEY_LAST_NAME), column);
@@ -175,6 +178,7 @@ public class CsvFiles {
 			return new Key(id, Optional.empty(), lastName, firstName, group, false);
 		}
 
+		@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 		private KeyCylinderPermissions getPermissions(final Map<Cylinder, Integer> cylinders,
 				final Map<Key, Integer> keys) {
 			final Map<Key, Set<Cylinder>> permissions = new HashMap<>();

@@ -12,7 +12,9 @@ import java.util.Set;
 import java.util.function.Function;
 
 import de.larssh.utils.collection.Maps;
+import lombok.ToString;
 
+@ToString
 public class KeyCylinderPermissions {
 	Map<Key, Key> keys;
 
@@ -53,10 +55,10 @@ public class KeyCylinderPermissions {
 	}
 
 	public boolean isIgnore(final Cylinder cylinder) {
-		return get(cylinder).map(Cylinder::isIgnore).orElse(false);
+		return get(cylinder).map(Cylinder::isIgnore).orElse(Boolean.FALSE);
 	}
 
 	public boolean isIgnore(final Key key) {
-		return get(key).map(Key::isIgnore).orElse(false);
+		return get(key).map(Key::isIgnore).orElse(Boolean.FALSE);
 	}
 }

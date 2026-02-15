@@ -20,6 +20,7 @@ import de.larssh.utils.Nullables;
 import de.larssh.utils.io.Resources;
 import de.larssh.utils.text.StringParseException;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
@@ -36,7 +37,6 @@ import picocli.CommandLine.Spec;
  */
 @Getter
 @RequiredArgsConstructor
-@SuppressWarnings({ "PMD.DataClass", "PMD.ExcessiveImports" })
 @Command(name = "key-cylinder-roles-mapper",
 		mixinStandardHelpOptions = true,
 		showDefaultValues = true,
@@ -63,11 +63,11 @@ public class KeyCylinderRolesMapperCli implements Callable<Integer>, IVersionPro
 
 	@NonFinal
 	@Parameters(descriptionKey = "SOURCE")
-	final Path source = Paths.get("");
+	Path source = Paths.get("");
 
 	@NonFinal
 	@Parameters(descriptionKey = "DESTINATION")
-	final Path destination = Paths.get("");
+	Path destination = Paths.get("");
 
 	@Override
 	public Integer call() throws IOException, StringParseException {
@@ -84,7 +84,11 @@ public class KeyCylinderRolesMapperCli implements Callable<Integer>, IVersionPro
 				: ExcelFiles.read(path);
 	}
 
-	@SuppressWarnings("resource")
+	@SuppressWarnings({
+			"checkstyle:SuppressWarnings",
+			"PMD.AvoidDeeplyNestedIfStmts",
+			"PMD.CognitiveComplexity",
+			"resource" })
 	private void comparePermissions(final KeyCylinderPermissions source, final KeyCylinderPermissions destination) {
 		final Set<Key> keys = new LinkedHashSet<>(source.getKeys());
 		keys.addAll(destination.getKeys());
@@ -141,5 +145,15 @@ public class KeyCylinderRolesMapperCli implements Callable<Integer>, IVersionPro
 				Resources.readManifest(getClass())
 						.map(manifest -> manifest.getMainAttributes().get(Name.IMPLEMENTATION_VERSION).toString())
 						.orElse("unknown") };
+	}
+
+	/**
+	 * Dummy to avoid the IDE to mark some fields as {@code final}.
+	 */
+	@SuppressWarnings("PMD.UnusedPrivateMethod")
+	@SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD", justification = "dummy method")
+	private void nonFinalDummy() {
+		source = Paths.get("");
+		destination = source;
 	}
 }

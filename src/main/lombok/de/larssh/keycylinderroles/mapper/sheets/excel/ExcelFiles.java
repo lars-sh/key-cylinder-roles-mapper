@@ -1,7 +1,6 @@
 package de.larssh.keycylinderroles.mapper.sheets.excel;
 
 import static de.larssh.utils.Collectors.toLinkedHashMap;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toSet;
 
@@ -10,6 +9,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -41,7 +41,44 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@SuppressWarnings({ "checkstyle:MultipleStringLiterals", "PMD.ExcessiveImports" })
 public class ExcelFiles {
+	private static final String SHEET_KEYS = "Transponder";
+
+	private static final String SHEET_KEY_ROLES = "Transponder-Berechtigungen";
+
+	private static final String SHEET_ROLE_PERMISSIONS = "Rollen-Berechtigungen";
+
+	private static final String SHEET_CYLINDERS = "Schließzylinder";
+
+	private static final String COLUMN_KEY_ID = "ID";
+
+	private static final String COLUMN_KEY_NAME = "Name";
+
+	private static final String COLUMN_KEY_LAST_NAME = "Nachname";
+
+	private static final String COLUMN_KEY_FIRST_NAME = "Vorname";
+
+	private static final String COLUMN_KEY_STATUS = "Status";
+
+	private static final String COLUMN_CYLINDER_ID = "ID";
+
+	private static final String COLUMN_CYLINDER_NAME = "Name";
+
+	private static final String COLUMN_CYLINDER_SECTION = "Bereich";
+
+	private static final String COLUMN_CYLINDER_BUILDING = "Haus";
+
+	private static final String COLUMN_CYLINDER_STATUS = "Status";
+
+	private static final String COLUMN_ROLE_KEY = "Transponder";
+
+	private static final String COLUMN_ROLE_NAME = "Rolle";
+
+	private static final String COLUMN_ROLE_CYLINDER = "Schließzylinder";
+
+	private static final String VALUE_IGNORE = "ignorieren";
+
 	static {
 		// Making sure that both Workbook Factories are registered to support XLS and
 		// XLSX. Registering automatically might be a problem when creating a JAR with
@@ -94,8 +131,9 @@ public class ExcelFiles {
 			return getPermissions(keys.values(), keyRoles, cylinders.values(), rolePermissions);
 		}
 
+		@SuppressWarnings("PMD.ShortVariable")
 		private Map<String, Cylinder> getCylinders() {
-			final Sheet sheet = workbook.getSheet("Schließzylinder");
+			final Sheet sheet = workbook.getSheet(SHEET_CYLINDERS);
 			if (sheet == null) {
 				throw new IllegalArgumentException(); // TODO
 			}
@@ -105,11 +143,11 @@ public class ExcelFiles {
 				throw new IllegalArgumentException(); // TODO
 			}
 
-			final int idColumn = getColumn(header, "ID").orElseThrow(); // TODO
-			final OptionalInt nameColumn = getColumn(header, "Name");
-			final OptionalInt sectionColumn = getColumn(header, "Bereich");
-			final OptionalInt buildingColumn = getColumn(header, "Haus");
-			final OptionalInt statusColumn = getColumn(header, "Status");
+			final int idColumn = getColumn(header, COLUMN_CYLINDER_ID).orElseThrow(); // TODO
+			final OptionalInt nameColumn = getColumn(header, COLUMN_CYLINDER_NAME);
+			final OptionalInt sectionColumn = getColumn(header, COLUMN_CYLINDER_SECTION);
+			final OptionalInt buildingColumn = getColumn(header, COLUMN_CYLINDER_BUILDING);
+			final OptionalInt statusColumn = getColumn(header, COLUMN_CYLINDER_STATUS);
 
 			return Workbooks.rows(sheet).skip(1).map(row -> {
 				final Optional<String> id = getValue(row, idColumn);
@@ -121,12 +159,13 @@ public class ExcelFiles {
 						getValue(row, nameColumn).orElse(""),
 						getValue(row, sectionColumn),
 						getValue(row, buildingColumn),
-						getValue(row, statusColumn).map("ignorieren"::equals).orElse(false));
+						getValue(row, statusColumn).map(VALUE_IGNORE::equals).orElse(Boolean.FALSE));
 			}).collect(toLinkedHashMap(Cylinder::getId, Function.identity()));
 		}
 
+		@SuppressWarnings("PMD.ShortVariable")
 		private Map<String, Key> getKeys() {
-			final Sheet sheet = workbook.getSheet("Transponder");
+			final Sheet sheet = workbook.getSheet(SHEET_KEYS);
 			if (sheet == null) {
 				throw new IllegalArgumentException(); // TODO
 			}
@@ -136,11 +175,11 @@ public class ExcelFiles {
 				throw new IllegalArgumentException(); // TODO
 			}
 
-			final int idColumn = getColumn(header, "ID").orElseThrow(); // TODO
-			final OptionalInt nameColumn = getColumn(header, "Name");
-			final OptionalInt lastNameColumn = getColumn(header, "Nachname");
-			final OptionalInt firstNameColumn = getColumn(header, "Vorname");
-			final OptionalInt statusColumn = getColumn(header, "Status");
+			final int idColumn = getColumn(header, COLUMN_KEY_ID).orElseThrow(); // TODO
+			final OptionalInt nameColumn = getColumn(header, COLUMN_KEY_NAME);
+			final OptionalInt lastNameColumn = getColumn(header, COLUMN_KEY_LAST_NAME);
+			final OptionalInt firstNameColumn = getColumn(header, COLUMN_KEY_FIRST_NAME);
+			final OptionalInt statusColumn = getColumn(header, COLUMN_KEY_STATUS);
 
 			return Workbooks.rows(sheet).skip(1).map(row -> {
 				final Optional<String> id = getValue(row, idColumn);
@@ -153,12 +192,13 @@ public class ExcelFiles {
 						getValue(row, lastNameColumn),
 						getValue(row, firstNameColumn),
 						Optional.empty(),
-						getValue(row, statusColumn).map("ignorieren"::equals).orElse(false));
+						getValue(row, statusColumn).map(VALUE_IGNORE::equals).orElse(Boolean.FALSE));
 			}).collect(toLinkedHashMap(Key::getId, Function.identity()));
 		}
 
+		@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 		private Map<Key, Set<String>> getKeyRoles(final Map<String, Key> keys) {
-			final Sheet sheet = workbook.getSheet("Transponder-Berechtigungen");
+			final Sheet sheet = workbook.getSheet(SHEET_KEY_ROLES);
 			if (sheet == null) {
 				throw new IllegalArgumentException(); // TODO
 			}
@@ -168,8 +208,8 @@ public class ExcelFiles {
 				throw new IllegalArgumentException(); // TODO
 			}
 
-			final int keyIdColumn = getColumn(header, "Transponder").orElseThrow(); // TODO
-			final int roleColumn = getColumn(header, "Rolle").orElseThrow(); // TODO
+			final int keyIdColumn = getColumn(header, COLUMN_ROLE_KEY).orElseThrow(); // TODO
+			final int roleColumn = getColumn(header, COLUMN_ROLE_NAME).orElseThrow(); // TODO
 
 			final Map<Key, Set<String>> keyRoles = new HashMap<>();
 			final int numberOfRows = sheet.getLastRowNum() + 1;
@@ -187,8 +227,9 @@ public class ExcelFiles {
 			return unmodifiableMap(keyRoles);
 		}
 
+		@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 		private Map<String, Set<Cylinder>> getRolePermissions(final Map<String, Cylinder> cylinders) {
-			final Sheet sheet = workbook.getSheet("Rollen-Berechtigungen");
+			final Sheet sheet = workbook.getSheet(SHEET_ROLE_PERMISSIONS);
 			if (sheet == null) {
 				throw new IllegalArgumentException(); // TODO
 			}
@@ -198,8 +239,8 @@ public class ExcelFiles {
 				throw new IllegalArgumentException(); // TODO
 			}
 
-			final int roleColumn = getColumn(header, "Rolle").orElseThrow(); // TODO
-			final int cylinderIdColumn = getColumn(header, "Schließzylinder").orElseThrow(); // TODO
+			final int roleColumn = getColumn(header, COLUMN_ROLE_NAME).orElseThrow(); // TODO
+			final int cylinderIdColumn = getColumn(header, COLUMN_ROLE_CYLINDER).orElseThrow(); // TODO
 
 			final Map<String, Set<Cylinder>> rolePermissions = new HashMap<>();
 			final int numberOfRows = sheet.getLastRowNum() + 1;
@@ -217,6 +258,7 @@ public class ExcelFiles {
 			return unmodifiableMap(rolePermissions);
 		}
 
+		@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 		private KeyCylinderPermissions getPermissions(final Collection<Key> keys,
 				final Map<Key, Set<String>> keyRoles,
 				final Collection<Cylinder> allCylinders,
@@ -229,7 +271,8 @@ public class ExcelFiles {
 					// permitted cylinders
 					final Set<Cylinder> cylinders = new HashSet<>(allCylinders);
 					cylinders.retainAll(roles.stream()
-							.flatMap(role -> Nullables.orElse(rolePermissions.get(role), emptySet()).stream())
+							.flatMap(role -> Nullables.orElseGet(rolePermissions.get(role), Collections::emptySet)
+									.stream())
 							.collect(toSet()));
 
 					if (!cylinders.isEmpty()) {

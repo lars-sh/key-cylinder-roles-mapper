@@ -9,8 +9,8 @@ import lombok.ToString;
 
 @Getter
 @ToString
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @RequiredArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Cylinder {
 	@EqualsAndHashCode.Include
 	@SuppressWarnings("PMD.ShortVariable")
@@ -24,6 +24,7 @@ public class Cylinder {
 
 	boolean ignore;
 
+	@SuppressWarnings("checkstyle:MultipleStringLiterals")
 	public String getTitle() {
 		final String title = getBuilding().map(building -> building + ", ").orElse("")
 				+ getSection().map(section -> section + ", ").orElse("")

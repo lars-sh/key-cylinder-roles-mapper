@@ -4,4 +4,6 @@
 	<suppress checks="JavadocVariable" />
 	<suppress checks="MissingJavadocMethod" />
 	<suppress checks="MissingJavadocType" />
+	
+	<suppress checks="MagicNumber" files="^(|.*[/\\])de[/\\]larssh[/\\]keycylinderroles[/\\]mapper[/\\]cli[/\\]KeyCylinderRolesMapperCli\.java$" />
 </suppressions>

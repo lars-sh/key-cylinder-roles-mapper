@@ -9,8 +9,9 @@ import lombok.ToString;
 
 @Getter
 @ToString
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @RequiredArgsConstructor
+@SuppressWarnings("PMD.ShortClassName")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Key {
 	@EqualsAndHashCode.Include
 	@SuppressWarnings("PMD.ShortVariable")
