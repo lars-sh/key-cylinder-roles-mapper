@@ -138,7 +138,7 @@ public class CsvFiles {
 		private Cylinder createCylinder(final int column, final int rowIndex) {
 			final CsvRow row = csv.get(rowIndex);
 
-			final String id = getValue(row, column + COLUMN_CYLINDER_ID).orElseThrow(); // TODO
+			final String id = getValue(row, column + COLUMN_CYLINDER_ID).get(); // TODO
 			final Optional<String> name = getValue(row, column + COLUMN_CYLINDER_NAME);
 			final Optional<String> building = getValue(row, column + COLUMN_CYLINDER_BUILDING);
 
@@ -170,7 +170,7 @@ public class CsvFiles {
 
 		@SuppressWarnings("PMD.ShortVariable")
 		private Key createKey(final int column, final int row) {
-			final String id = getValue(csv.get(row + ROW_KEY_ID), column).orElseThrow(); // TODO
+			final String id = getValue(csv.get(row + ROW_KEY_ID), column).get(); // TODO
 			final Optional<String> lastName = getValue(csv.get(row + ROW_KEY_LAST_NAME), column);
 			final Optional<String> firstName = getValue(csv.get(row + ROW_KEY_FIRST_NAME), column);
 			final Optional<String> group = getValue(csv.get(row + ROW_KEY_GROUP), column);

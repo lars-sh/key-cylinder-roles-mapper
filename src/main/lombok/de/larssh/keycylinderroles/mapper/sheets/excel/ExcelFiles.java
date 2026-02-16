@@ -143,7 +143,7 @@ public class ExcelFiles {
 				throw new IllegalArgumentException(); // TODO
 			}
 
-			final int idColumn = getColumn(header, COLUMN_CYLINDER_ID).orElseThrow(); // TODO
+			final int idColumn = getColumn(header, COLUMN_CYLINDER_ID).getAsInt(); // TODO
 			final OptionalInt nameColumn = getColumn(header, COLUMN_CYLINDER_NAME);
 			final OptionalInt sectionColumn = getColumn(header, COLUMN_CYLINDER_SECTION);
 			final OptionalInt buildingColumn = getColumn(header, COLUMN_CYLINDER_BUILDING);
@@ -175,7 +175,7 @@ public class ExcelFiles {
 				throw new IllegalArgumentException(); // TODO
 			}
 
-			final int idColumn = getColumn(header, COLUMN_KEY_ID).orElseThrow(); // TODO
+			final int idColumn = getColumn(header, COLUMN_KEY_ID).getAsInt(); // TODO
 			final OptionalInt nameColumn = getColumn(header, COLUMN_KEY_NAME);
 			final OptionalInt lastNameColumn = getColumn(header, COLUMN_KEY_LAST_NAME);
 			final OptionalInt firstNameColumn = getColumn(header, COLUMN_KEY_FIRST_NAME);
@@ -208,8 +208,8 @@ public class ExcelFiles {
 				throw new IllegalArgumentException(); // TODO
 			}
 
-			final int keyIdColumn = getColumn(header, COLUMN_ROLE_KEY).orElseThrow(); // TODO
-			final int roleColumn = getColumn(header, COLUMN_ROLE_NAME).orElseThrow(); // TODO
+			final int keyIdColumn = getColumn(header, COLUMN_ROLE_KEY).getAsInt(); // TODO
+			final int roleColumn = getColumn(header, COLUMN_ROLE_NAME).getAsInt(); // TODO
 
 			final Map<Key, Set<String>> keyRoles = new HashMap<>();
 			final int numberOfRows = sheet.getLastRowNum() + 1;
@@ -219,7 +219,7 @@ public class ExcelFiles {
 				final Optional<String> keyId = getValue(row, keyIdColumn);
 				if (keyId.isPresent()) {
 					final Key key = Nullables.orElseThrow(keys.get(keyId.get())); // TODO
-					final String role = getValue(row, roleColumn).orElseThrow(); // TODO
+					final String role = getValue(row, roleColumn).get(); // TODO
 
 					keyRoles.computeIfAbsent(key, k -> new HashSet<>()).add(role);
 				}
@@ -239,8 +239,8 @@ public class ExcelFiles {
 				throw new IllegalArgumentException(); // TODO
 			}
 
-			final int roleColumn = getColumn(header, COLUMN_ROLE_NAME).orElseThrow(); // TODO
-			final int cylinderIdColumn = getColumn(header, COLUMN_ROLE_CYLINDER).orElseThrow(); // TODO
+			final int roleColumn = getColumn(header, COLUMN_ROLE_NAME).getAsInt(); // TODO
+			final int cylinderIdColumn = getColumn(header, COLUMN_ROLE_CYLINDER).getAsInt(); // TODO
 
 			final Map<String, Set<Cylinder>> rolePermissions = new HashMap<>();
 			final int numberOfRows = sheet.getLastRowNum() + 1;
@@ -250,7 +250,7 @@ public class ExcelFiles {
 				final Optional<String> cylinderId = getValue(row, cylinderIdColumn);
 				if (cylinderId.isPresent()) {
 					final Cylinder cylinder = Nullables.orElseThrow(cylinders.get(cylinderId.get())); // TODO
-					final String role = getValue(row, roleColumn).orElseThrow(); // TODO
+					final String role = getValue(row, roleColumn).get(); // TODO
 
 					rolePermissions.computeIfAbsent(role, k -> new HashSet<>()).add(cylinder);
 				}
