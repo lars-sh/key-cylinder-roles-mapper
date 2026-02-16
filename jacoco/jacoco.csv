@@ -1,0 +1,11 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Key Cylinder Roles Mapper,de.larssh.keycylinderroles.mapper.cli,KeyCylinderRolesMapperCli,213,0,18,0,34,0,18,0,9,0
+Key Cylinder Roles Mapper,de.larssh.keycylinderroles.mapper.data,Key,67,0,2,0,3,0,5,0,4,0
+Key Cylinder Roles Mapper,de.larssh.keycylinderroles.mapper.data,KeyCylinderPermissions,99,0,4,0,13,0,11,0,9,0
+Key Cylinder Roles Mapper,de.larssh.keycylinderroles.mapper.data,Cylinder,50,0,2,0,2,0,4,0,3,0
+Key Cylinder Roles Mapper,de.larssh.keycylinderroles.mapper.utils,Workbooks,111,0,12,0,22,0,13,0,7,0
+Key Cylinder Roles Mapper,de.larssh.keycylinderroles.mapper.utils,CellValues,282,0,37,0,37,0,34,0,11,0
+Key Cylinder Roles Mapper,de.larssh.keycylinderroles.mapper.sheets.csv,CsvFiles,45,0,4,0,10,0,4,0,2,0
+Key Cylinder Roles Mapper,de.larssh.keycylinderroles.mapper.sheets.csv,CsvFiles.CsvFileReader,358,0,30,0,53,0,31,0,16,0
+Key Cylinder Roles Mapper,de.larssh.keycylinderroles.mapper.sheets.excel,ExcelFiles,29,0,0,0,7,0,2,0,2,0
+Key Cylinder Roles Mapper,de.larssh.keycylinderroles.mapper.sheets.excel,ExcelFiles.ExcelFileReader,508,0,40,0,95,0,35,0,15,0
