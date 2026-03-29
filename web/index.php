@@ -19,6 +19,7 @@ $isPostRequest = $_SERVER['REQUEST_METHOD'] === 'POST';
 
 // Call Key Cylinder Roles Mapper
 $message = null;
+$result = null;
 if ($isPostRequest) {
 	$source = null;
 	$destination = null;
@@ -42,7 +43,6 @@ if ($isPostRequest) {
 		}
 	}
 
-	$result = null;
 	if ($source === null || $destination === null) {
 		http_response_code(400);
 		$message = 'Sie müssen eine Ist- und eine Planungsdatei zum Hochladen auswählen.';
